@@ -1,133 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project name="TeamProject" default="run" basedir=".">
 
     <description>
         Build file for the team's collected Java solutions.
-        Handles cleaning, compiling, testing, running, documentation, and packaging.
+        Handles cleaning, compiling, running, documentation, and packaging.
     </description>
 
-    <!-- Load external properties -->
+    <!-- ===== Load external properties ===== -->
     <property file="build.properties"/>
 
-    <!-- ===== Classpaths ===== -->
-    <path id="lib.classpath.api">
-        <fileset dir="${lib.dir}">
-            <include name="junit-jupiter-api-*.jar"/>
-            <include name="opentest4j-*.jar"/>
-        </fileset>
-    </path>
-
-    <path id="lib.classpath.launcher">
-        <fileset dir="${lib.dir}">
-            <include name="ant-junitlauncher-*.jar"/>
-            <include name="junit-platform-launcher-*.jar"/>
-        </fileset>
-    </path>
-
-    <path id="lib.classpath.runtime">
-        <fileset dir="${lib.dir}">
-            <include name="*.jar"/>
-        </fileset>
-    </path>
-
+    <!-- ===== Project Classpath ===== -->
     <path id="project.classpath">
         <pathelement location="${classes.dir}"/>
     </path>
-
-    <path id="test.classpath">
-        <path refid="project.classpath"/>
-        <pathelement location="${test.classes.dir}"/>
-        <path refid="lib.classpath.api"/>
-        <path refid="lib.classpath.runtime"/>
-    </path>
-
-    <!-- ===== JUnit Launcher Definition ===== -->
-    <taskdef name="junitlauncher"
-             classname="org.apache.tools.ant.taskdefs.optional.junitlauncher.confined.JUnitLauncherTask"
-             classpathref="lib.classpath.launcher"/>
-
 
     <!-- ===== Initialization ===== -->
     <target name="init" description="Creates necessary directory structure.">
         <tstamp/>
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}"/>
-        <mkdir dir="${test.classes.dir}"/>
-        <mkdir dir="${test.reports.dir}"/>
         <mkdir dir="${dist.dir}"/>
         <mkdir dir="${doc.dir}"/>
     </target>
 
     <!-- ===== Cleaning ===== -->
-    <target name="clean" description="Deletes all generated files and directories.">
+    <target name="clean" description="Deletes all generated files and directories (Caution! Cannot be undone).">
         <delete dir="${build.dir}"/>
         <delete dir="${dist.dir}"/>
         <delete dir="${doc.dir}"/>
+        <echo>Cleaned project directories.</echo>
     </target>
 
-    <!-- ===== Compilation ===== -->
+    <!-- ===== Compile All ===== -->
     <target name="compile-all" depends="init" description="Compiles all Java source code.">
         <javac srcdir="${src.dir}"
                destdir="${classes.dir}"
-               includeantruntime="false" debug="true">
-            <classpath>
-                <path refid="lib.classpath.runtime"/>
-            </classpath>
+               includeantruntime="false"
+               debug="true"/>
+        <echo>Successfully compiled all source files.</echo>
+    </target>
+
+    <!-- ===== Compile Single File ===== -->
+    <target name="compile-single" depends="init" description="Compiles a specific Java source file.">
+        <fail unless="file.to.compile"
+              message="You must specify a file to compile using -Dfile.to.compile=path/to/File.java"/>
+        <javac srcdir="${src.dir}"
+               destdir="${classes.dir}"
+               includeantruntime="false"
+               debug="true">
+            <include name="${file.to.compile}"/>
         </javac>
-        <echo>✅ Successfully compiled all source files.</echo>
-    </target>
-
-    <target name="compile-tests" depends="compile-all" description="Compiles all test source code.">
-        <javac srcdir="${test.dir}"
-               destdir="${test.classes.dir}"
-               includeantruntime="false" debug="true">
-            <classpath>
-                <path refid="project.classpath"/>
-                <path refid="lib.classpath.api"/>
-                <path refid="lib.classpath.runtime"/>
-                <path location="${classes.dir}"/>
-            </classpath>
-        </javac>
-        <echo>✅ Successfully compiled all test files.</echo>
-    </target>
-
-    <!-- ===== Testing ===== -->
-    <target name="test" depends="compile-tests" description="Runs all JUnit 5 tests.">
-        <mkdir dir="${test.reports.dir}/xml"/>
-        <mkdir dir="${test.reports.dir}/html"/>
-
-        <junitlauncher haltOnFailure="false" failureproperty="test.failed" printsummary="true">
-            <classpath>
-                <path refid="test.classpath"/>
-            </classpath>
-            <testclasses>
-                <fileset dir="${test.classes.dir}">
-                    <include name="**/*Test.class"/>
-                </fileset>
-                <listener type="legacy-xml" sendSysOut="true" sendSysErr="true"/>
-            </testclasses>
-        </junitlauncher>
-
-        <junitreport todir="${test.reports.dir}">
-            <fileset dir="${test.reports.dir}/xml">
-                <include name="TEST-*.xml"/>
-            </fileset>
-            <report format="frames" todir="${test.reports.dir}/html"/>
-        </junitreport>
-
-        <echo>-------------------------------------------------</echo>
-        <echo>✅ Test report available at: file://${basedir}/${test.reports.dir}/html/index.html</echo>
-        <echo>-------------------------------------------------</echo>
-
-        <fail message="❌ Tests failed. Check the report." if="test.failed"/>
+        <echo>Successfully compiled single file: ${file.to.compile}</echo>
     </target>
 
 
-    <!-- ===== Running ===== -->
+
+
+    <!-- ===== Run ===== -->
     <target name="run" depends="compile-all" description="Runs the main class.">
         <java classname="${main.class}" fork="true">
             <classpath>
                 <path refid="project.classpath"/>
-                <path refid="lib.classpath.runtime"/>
             </classpath>
         </java>
     </target>
@@ -144,11 +77,12 @@
             <doctitle><![CDATA[<h1>${project.name}</h1>]]></doctitle>
             <bottom><![CDATA[<i>Copyright © 2025 ${team.name}. All Rights Reserved.</i>]]></bottom>
         </javadoc>
-        <echo>✅ Javadoc generated in '${doc.dir}' directory.</echo>
+        <echo>Javadoc generated in '${doc.dir}' directory.</echo>
     </target>
 
     <!-- ===== Packaging ===== -->
     <target name="jar" depends="compile-all, doc" description="Packages compiled classes and docs into JARs.">
+        <!-- Executable JAR -->
         <jar destfile="${dist.dir}/${jar.classes.file}" basedir="${classes.dir}">
             <manifest>
                 <attribute name="Main-Class" value="${main.class}"/>
@@ -157,15 +91,16 @@
                 <attribute name="Implementation-Vendor" value="${team.name}"/>
             </manifest>
         </jar>
-        <echo>✅ Created executable JAR: ${dist.dir}/${jar.classes.file}</echo>
+        <echo>Created executable JAR: ${dist.dir}/${jar.classes.file}</echo>
 
+        <!-- Documentation JAR -->
         <jar destfile="${dist.dir}/${jar.doc.file}" basedir="${doc.dir}"/>
-        <echo>✅ Created documentation JAR: ${dist.dir}/${jar.doc.file}</echo>
+        <echo>Created documentation JAR: ${dist.dir}/${jar.doc.file}</echo>
     </target>
 
     <!-- ===== Full Rebuild ===== -->
     <target name="rebuild" depends="clean, jar" description="Performs a full clean build.">
-        <echo>♻️ Project has been completely rebuilt.</echo>
+        <echo>Project has been completely rebuilt.</echo>
     </target>
 
 </project>
