@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="TeamProject" default="run" basedir=".">
+<project name="Team2ApacheAnt" default="run" basedir=".">
 
     <description>
         Build file for the team's collected Java solutions.
@@ -14,22 +14,8 @@
         <pathelement location="${classes.dir}"/>
     </path>
 
-    <!-- ===== Initialization ===== -->
-    <target name="init" description="Creates necessary directory structure.">
-        <tstamp/>
-        <mkdir dir="${build.dir}"/>
-        <mkdir dir="${classes.dir}"/>
-        <mkdir dir="${dist.dir}"/>
-        <mkdir dir="${doc.dir}"/>
-    </target>
 
-    <!-- ===== Cleaning ===== -->
-    <target name="clean" description="Deletes all generated files and directories (Caution! Cannot be undone).">
-        <delete dir="${build.dir}"/>
-        <delete dir="${dist.dir}"/>
-        <delete dir="${doc.dir}"/>
-        <echo>Cleaned project directories.</echo>
-    </target>
+
 
     <!-- ===== Compile All ===== -->
     <target name="compile-all" depends="init" description="Compiles all Java source code.">
@@ -65,6 +51,8 @@
         </java>
     </target>
 
+
+
     <!-- ===== Documentation ===== -->
     <target name="doc" depends="init" description="Generates Javadoc documentation.">
         <javadoc packagenames="com.team2.*"
@@ -79,6 +67,25 @@
         </javadoc>
         <echo>Javadoc generated in '${doc.dir}' directory.</echo>
     </target>
+
+
+    <target name="init" description="Creates necessary directory structure.">
+        <tstamp/>
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+        <mkdir dir="${doc.dir}"/>
+    </target>
+
+
+    <!-- ===== Cleaning ===== -->
+    <target name="clean" description="Deletes all generated files and directories (Caution! Cannot be undone).">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+        <delete dir="${doc.dir}"/>
+        <echo>Cleaned project directories.</echo>
+    </target>
+
 
     <!-- ===== Packaging ===== -->
     <target name="jar" depends="compile-all, doc" description="Packages compiled classes and docs into JARs.">
